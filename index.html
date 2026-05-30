@@ -7,5 +7,22 @@
 <body>
   <h1>Azure Static Web Apps の練習</h1>
   <p>これは Entra ID・Azure・アクセス制御を理解するための練習サイトです。</p>
+
+  <hr>
+
+  <h2>ログイン中のユーザー情報</h2>
+  <pre id="user-info">読み込み中...</pre>
+
+  <script>
+    async function loadUserInfo() {
+      const response = await fetch('/.auth/me');
+      const data = await response.json();
+
+      document.getElementById('user-info').textContent =
+        JSON.stringify(data, null, 2);
+    }
+
+    loadUserInfo();
+  </script>
 </body>
 </html>
