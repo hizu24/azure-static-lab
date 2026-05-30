@@ -1,6 +1,18 @@
 {
   "routes": [
     {
+      "route": "/public.html",
+      "allowedRoles": ["anonymous", "authenticated"]
+    },
+    {
+      "route": "/member.html",
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/admin.html",
+      "allowedRoles": ["admin"]
+    },
+    {
       "route": "/*",
       "allowedRoles": ["authenticated"]
     }
@@ -9,6 +21,10 @@
     "401": {
       "statusCode": 302,
       "redirect": "/.auth/login/aad"
+    },
+    "403": {
+      "statusCode": 302,
+      "redirect": "/member.html"
     }
   }
 }
