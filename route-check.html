@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Route Check Lab</title>
+</head>
+<body>
+  <h1>通信経路振り分けの練習</h1>
+
+  <p>
+    このページは、Prisma Access、プロキシ、直接通信、社内システム向け通信の
+    経路分けを理解するための練習です。
+  </p>
+
+  <hr>
+
+  <h2>経路ルール</h2>
+  <ul>
+    <li>microsoft.com / office.com / teams.microsoft.com → 直接通信</li>
+    <li>intra.company.local / internal.company.local → 社内システム向け</li>
+    <li>proxy-only.example.com → プロキシ経由</li>
+    <li>それ以外 → Prisma Access経由</li>
+  </ul>
+
+  <hr>
+
+  <h2>通信先を入力</h2>
+  <input id="destination" type="text" placeholder="例：teams.microsoft.com" size="40">
+  <button onclick="checkRoute()">経路を判定する</button>
+
+  <h2>判定結果</h2>
+  <pre id="result">ここに結果が表示されます。</pre>
+
+  <hr>
+
+  <h2>案件に置き換えると</h2>
+  <ul>
+    <li>直接通信：Prismaを通さず、端末からインターネットへ出す通信</li>
+    <li>Prisma Access経由：GlobalProtect経由でPrismaに流す通信</li>
+    <li>プロキシ経由：既存プロキシや新規プロキシを通す通信</li>
+    <li>社内システム向け：社内ネットワークや閉域向けの通信</li>
+  </ul>
+
+  <p><a href="/">トップページへ戻る</a></p>
+
+  <script>
+    function checkRoute() {
+      const destination = document.getElementById('destination').value.trim().toLowerCase();
+
+      let route = "";
+      let description = "";
+
+      if (
+        destination.includes("microsoft.com") ||
+        destination.includes("office.com") ||
+        destination.includes("teams.microsoft.com")
+      ) {
+        route = "直接通信";
+        description = "Microsoft 365系の通信として、Prismaを通さず直接インターネットへ出す想定です。";
+      } else if (
+        destination.includes("intra.company.local") ||
+        destination.includes("internal.company.local")
+      ) {
+        route = "社内システム向け";
+        description = "社内システム向け通信として、社内ネットワークや閉域向けの経路に流す想定です。";
+      } else if (
+        destination.includes("proxy-only.example.com")
+      ) {
+        route = "プロキシ経由";
+        description = "特定の通信だけ既存プロキシ、または新規プロキシを経由させる想定です。";
+      } else {
+        route = "Prisma Access経由";
+        description = "通常のWeb/SaaS通信として、GlobalProtect経由でPrisma Accessへ流す想定です。";
+      }
+
+      const result = {
+        入力した通信先: destination,
+        判定された経路: route,
+        説明: description
+      };
+
+      document.getElementById('result').textContent =
+        JSON.stringify(result, null, 2);
+    }
+  </script>
+</body>
+</html>
