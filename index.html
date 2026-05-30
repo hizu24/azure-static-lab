@@ -10,8 +10,19 @@
 
   <hr>
 
+  <h2>ページ一覧</h2>
+  <ul>
+    <li><a href="/public.html">公開ページ：誰でも見られる</a></li>
+    <li><a href="/member.html">ログイン済みユーザー用ページ：ログイン済みだけ</a></li>
+    <li><a href="/admin.html">管理者用ページ：admin ロールだけ</a></li>
+  </ul>
+
+  <hr>
+
   <h2>ログイン中のユーザー情報</h2>
   <pre id="user-info">読み込み中...</pre>
+
+  <p><a href="/.auth/logout">ログアウト</a></p>
 
   <script>
     async function loadUserInfo() {
