@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Device Management Lab</title>
+</head>
+<body>
+  <h1>端末管理・条件付きアクセスの練習</h1>
+
+  <p>
+    このページは、Intuneで管理されている端末か、準拠端末か、
+    スマホを持っているか、共用端末かによってアクセス可否が変わる考え方を理解するための練習です。
+  </p>
+
+  <hr>
+
+  <h2>端末種別</h2>
+  <label>
+    <input type="radio" name="deviceType" value="windows" checked>
+    Windows 11端末
+  </label>
+  <label>
+    <input type="radio" name="deviceType" value="iphone-personal">
+    iPhone 一人利用
+  </label>
+  <label>
+    <input type="radio" name="deviceType" value="iphone-shared">
+    iPhone 共用利用
+  </label>
+
+  <h2>Intune管理状態</h2>
+  <label>
+    <input type="radio" name="managed" value="managed" checked>
+    管理済み
+  </label>
+  <label>
+    <input type="radio" name="managed" value="unmanaged">
+    未管理
+  </label>
+
+  <h2>準拠状態</h2>
+  <label>
+    <input type="radio" name="compliance" value="compliant" checked>
+    準拠
+  </label>
+  <label>
+    <input type="radio" name="compliance" value="noncompliant">
+    非準拠
+  </label>
+
+  <h2>スマホ/MFA</h2>
+  <label>
+    <input type="radio" name="mfa" value="available" checked>
+    MFA可能
+  </label>
+  <label>
+    <input type="radio" name="mfa" value="unavailable">
+    MFA不可
+  </label>
+
+  <p>
+    <button onclick="checkDevice()">アクセス判定する</button>
+  </p>
+
+  <h2>判定結果</h2>
+  <pre id="result">ここに結果が表示されます。</pre>
+
+  <hr>
+
+  <h2>案件に置き換えると</h2>
+  <ul>
+    <li>Intune管理済み：会社が端末状態を確認・制御できる</li>
+    <li>未管理端末：会社が安全性を確認しづらい</li>
+    <li>準拠端末：パスコード、暗号化、OSバージョンなどがルールを満たす</li>
+    <li>非準拠端末：ルール違反があり、アクセス制限対象になりやすい</li>
+    <li>共用iPhone：誰のIDで使うか、MFAやログ追跡が難しくなりやすい</li>
+    <li>スマホなしユーザー：MFA代替手段の検討が必要</li>
+  </ul>
+
+  <p><a href="/">トップページへ戻る</a></p>
+
+  <script>
+    function getValue(name) {
+      return document.querySelector(`input[name="${name}"]:checked`).value;
+    }
+
+    function checkDevice() {
+      const deviceType = getValue("deviceType");
+      const managed = getValue("managed");
+      const compliance = getValue("compliance");
+      const mfa = getValue("mfa");
+
+      let decision = "許可";
+      let reasons = [];
+
+      if (managed === "unmanaged") {
+        decision = "拒否";
+        reasons.push("Intune管理対象ではないため、会社管理端末として信頼できない想定です。");
+      }
+
+      if (compliance === "noncompliant") {
+        decision = "拒否";
+        reasons.push("端末が準拠状態ではないため、条件付きアクセスで拒否される想定です。");
+      }
+
+      if (mfa === "unavailable") {
+        decision = "要代替手段";
+        reasons.push("MFAができないため、FIDO2キー、Temporary Access Pass、別認証手段などの検討が必要です。");
+      }
+
+      if (deviceType === "iphone-shared") {
+        if (decision === "許可") {
+          decision = "要設計確認";
+        }
+        reasons.push("共用iPhoneのため、誰のIDで認証するか、利用者ログをどう残すかが論点です。");
+      }
+
+      if (reasons.length === 0) {
+        reasons.push("管理済み・準拠・MFA可能な端末として、アクセス許可される想定です。");
+      }
+
+      const deviceName = {
+        "windows": "Windows 11端末",
+        "iphone-personal": "iPhone 一人利用",
+        "iphone-shared": "iPhone 共用利用"
+      }[deviceType];
+
+      const result = {
+        端末種別: deviceName,
+        Intune管理状態: managed === "managed" ? "管理済み" : "未管理",
+        準拠状態: compliance === "compliant" ? "準拠" : "非準拠",
+        MFA状態: mfa === "available" ? "MFA可能" : "MFA不可",
+        判定: decision,
+        理由: reasons
+      };
+
+      document.getElementById("result").textContent =
+        JSON.stringify(result, null, 2);
+    }
+  </script>
+</body>
+</html>
