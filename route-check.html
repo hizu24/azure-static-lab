@@ -8,21 +8,21 @@
   <h1>通信経路振り分けの練習</h1>
 
   <p>
-    このページは、Prisma Access、プロキシ、直接通信、社内システム向け通信の
-    経路分けを理解するための練習です。
+    このページは、社内・社外の場所と通信先によって、
+    Prisma Access、直接通信、プロキシ、社内経路をどう使い分けるかを理解するための練習です。
   </p>
 
   <hr>
 
-  <h2>経路ルール</h2>
-  <ul>
-    <li>microsoft.com / office.com / teams.microsoft.com → 直接通信</li>
-    <li>intra.company.local / internal.company.local → 社内システム向け</li>
-    <li>proxy-only.example.com → プロキシ経由</li>
-    <li>それ以外 → Prisma Access経由</li>
-  </ul>
-
-  <hr>
+  <h2>利用場所</h2>
+  <label>
+    <input type="radio" name="location" value="inside" checked>
+    社内
+  </label>
+  <label>
+    <input type="radio" name="location" value="outside">
+    社外
+  </label>
 
   <h2>通信先を入力</h2>
   <input id="destination" type="text" placeholder="例：teams.microsoft.com" size="40">
@@ -33,39 +33,66 @@
 
   <hr>
 
+  <h2>経路ルール</h2>
+  <ul>
+    <li>Microsoft 365系：直接通信</li>
+    <li>社内 + 社内システム：社内LAN経由</li>
+    <li>社外 + 社内システム：GlobalProtect → Prisma Access → 社内システム</li>
+    <li>特定サイト：プロキシ経由</li>
+    <li>それ以外：Prisma Access経由</li>
+  </ul>
+
+  <hr>
+
   <h2>案件に置き換えると</h2>
   <ul>
-    <li>直接通信：Prismaを通さず、端末からインターネットへ出す通信</li>
-    <li>Prisma Access経由：GlobalProtect経由でPrismaに流す通信</li>
-    <li>プロキシ経由：既存プロキシや新規プロキシを通す通信</li>
-    <li>社内システム向け：社内ネットワークや閉域向けの通信</li>
+    <li>社内：会社ネットワークにいる端末</li>
+    <li>社外：自宅・外出先・スマホ回線などから使う端末</li>
+    <li>GlobalProtect：端末からPrismaへつなぐエージェント</li>
+    <li>Prisma Access：通信を検査・制御するクラウド側の基盤</li>
+    <li>直接通信：Prismaを通さず、外部サービスへ出す通信</li>
+    <li>社内LAN経由：社内にいる時だけ使える内部経路</li>
   </ul>
 
   <p><a href="/">トップページへ戻る</a></p>
 
   <script>
+    function getSelectedLocation() {
+      return document.querySelector('input[name="location"]:checked').value;
+    }
+
     function checkRoute() {
+      const location = getSelectedLocation();
       const destination = document.getElementById('destination').value.trim().toLowerCase();
 
       let route = "";
       let description = "";
 
-      if (
+      const isMicrosoft365 =
         destination.includes("microsoft.com") ||
         destination.includes("office.com") ||
-        destination.includes("teams.microsoft.com")
-      ) {
+        destination.includes("teams.microsoft.com") ||
+        destination.includes("sharepoint.com") ||
+        destination.includes("outlook.office.com");
+
+      const isInternalSystem =
+        destination.includes("intra.company.local") ||
+        destination.includes("internal.company.local") ||
+        destination.includes("fileserver.company.local");
+
+      const isProxyOnly =
+        destination.includes("proxy-only.example.com");
+
+      if (isMicrosoft365) {
         route = "直接通信";
         description = "Microsoft 365系の通信として、Prismaを通さず直接インターネットへ出す想定です。";
-      } else if (
-        destination.includes("intra.company.local") ||
-        destination.includes("internal.company.local")
-      ) {
-        route = "社内システム向け";
-        description = "社内システム向け通信として、社内ネットワークや閉域向けの経路に流す想定です。";
-      } else if (
-        destination.includes("proxy-only.example.com")
-      ) {
+      } else if (isInternalSystem && location === "inside") {
+        route = "社内LAN経由";
+        description = "社内にいるため、社内システムへは社内ネットワーク経由でアクセスする想定です。";
+      } else if (isInternalSystem && location === "outside") {
+        route = "GlobalProtect → Prisma Access → 社内システム";
+        description = "社外にいるため、GlobalProtectでPrisma Accessへ接続し、そこから社内システムへアクセスする想定です。";
+      } else if (isProxyOnly) {
         route = "プロキシ経由";
         description = "特定の通信だけ既存プロキシ、または新規プロキシを経由させる想定です。";
       } else {
@@ -74,6 +101,7 @@
       }
 
       const result = {
+        利用場所: location === "inside" ? "社内" : "社外",
         入力した通信先: destination,
         判定された経路: route,
         説明: description
