@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Page</title>
+</head>
+<body>
+  <h1>管理者用ページ</h1>
+  <p>このページは admin ロールを持つユーザーだけが見られる想定です。</p>
+
+  <h2>ログイン中のユーザー情報</h2>
+  <pre id="user-info">読み込み中...</pre>
+
+  <ul>
+    <li><a href="/public.html">公開ページ</a></li>
+    <li><a href="/member.html">ログイン済みユーザー用ページ</a></li>
+    <li><a href="/.auth/logout">ログアウト</a></li>
+  </ul>
+
+  <script>
+    async function loadUserInfo() {
+      const response = await fetch('/.auth/me');
+      const data = await response.json();
+
+      document.getElementById('user-info').textContent =
+        JSON.stringify(data, null, 2);
+    }
+
+    loadUserInfo();
+  </script>
+</body>
+</html>
