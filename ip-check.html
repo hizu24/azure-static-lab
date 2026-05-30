@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>IP Whitelist Lab</title>
+</head>
+<body>
+  <h1>IPホワイトリスト判定の練習</h1>
+
+  <p>
+    このページは、SaaSやAzure側で「許可されたグローバルIPから来た通信だけ通す」
+    という考え方を理解するための練習です。
+  </p>
+
+  <hr>
+
+  <h2>許可IPリスト</h2>
+  <p>まずは、自宅Wi-FiのグローバルIPを下のリストに入れてください。</p>
+
+  <textarea id="allow-list" rows="5" cols="50">ここに自宅Wi-FiのグローバルIPを入力</textarea>
+
+  <h2>アクセス元IP</h2>
+  <p>確認したIPアドレスを入力してください。</p>
+
+  <input id="source-ip" type="text" placeholder="例：123.45.67.89" size="30">
+  <button onclick="checkIp()">判定する</button>
+
+  <h2>判定結果</h2>
+  <pre id="result">ここに結果が表示されます。</pre>
+
+  <hr>
+
+  <h2>案件に置き換えると</h2>
+  <ul>
+    <li>自宅Wi-FiのIP：許可された出口IP</li>
+    <li>スマホ回線のIP：許可されていない出口IP</li>
+    <li>Prismaの出口IP：SaaS側に登録する許可IP</li>
+    <li>プロキシの出口IP：SaaS/Azure側から見えるアクセス元IP</li>
+  </ul>
+
+  <p><a href="/">トップページへ戻る</a></p>
+
+  <script>
+    function checkIp() {
+      const allowListText = document.getElementById('allow-list').value;
+      const sourceIp = document.getElementById('source-ip').value.trim();
+
+      const allowList = allowListText
+        .split(/\s+/)
+        .map(ip => ip.trim())
+        .filter(ip => ip.length > 0);
+
+      const isAllowed = allowList.includes(sourceIp);
+
+      const result = {
+        入力されたアクセス元IP: sourceIp,
+        ホワイトリスト: allowList,
+        判定: isAllowed ? "許可" : "拒否",
+        説明: isAllowed
+          ? "このIPはホワイトリストにあるため、アクセス許可される想定です。"
+          : "このIPはホワイトリストにないため、アクセス拒否される想定です。"
+      };
+
+      document.getElementById('result').textContent =
+        JSON.stringify(result, null, 2);
+    }
+  </script>
+</body>
+</html>
